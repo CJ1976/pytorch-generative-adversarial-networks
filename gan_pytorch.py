@@ -174,7 +174,7 @@ stats(extract(d_fake_data))))
 end_time = time.time()
 print("Elapsed time was %g seconds" % (end_time - start_time))
 
-# display a simple graph to see results after program is ran.
+# display a simple graph to see results after program is ran. 
 
 plt.plot(chart_data[1],label = "d real error")
      
