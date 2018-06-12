@@ -13,6 +13,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
+#create a chart to visualize the data when the training is complete
 chart_data = np.zeros([4, 31])
 start_time = time.time()
 
@@ -135,7 +136,17 @@ for epoch in range(num_epochs):
         g_optimizer.step()  # Only optimizes G's parameters
         # not sure if error is a python term or not so using the_error
     the_error = math.fabs(g_error-d_real_error) 
+#gave it variable learning rate, the closer it is to being right, the stronger the reinforcement feedback is.
+# I played around with 2 variable rates 
+# the first one is 
+#    if num_epochs > 1:
+#        d_learning_rate = 1/(math.log(math.fabs(g_error-d_real_error)+1.01))
+#        
+#    if num_epochs > 1:
+#        g_learning_rate = 1/(math.log(math.fabs(g_error-d_real_error+1.01)))
 
+# and the second is below. I never tested both over a series of tests to find out if it has any improvement or not but the eyeball method
+# looks good and makes me think there should be more testing. I just can't do it now as I am too busy so go wild all and let everyone know.
     if num_epochs > 1:
         d_learning_rate = 1/math.exp(the_error*the_error)
         
@@ -163,7 +174,7 @@ stats(extract(d_fake_data))))
 end_time = time.time()
 print("Elapsed time was %g seconds" % (end_time - start_time))
 
-
+# display a simple graph to see results after program is ran.
 
 plt.plot(chart_data[1],label = "d real error")
      
