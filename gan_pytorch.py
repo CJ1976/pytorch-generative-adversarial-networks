@@ -2,12 +2,19 @@
 
 # Generative Adversarial Networks (GAN) example in PyTorch.
 # See related blog post at https://medium.com/@devnag/generative-adversarial-networks-gans-in-50-lines-of-code-pytorch-e81b79659e3f#.sch4xgsa9
+
+import math as math
+import matplotlib.pyplot as plt
+import time
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
+
+chart_data = np.zeros([4, 31])
+start_time = time.time()
 
 # Data params
 data_mean = 4
@@ -25,10 +32,12 @@ minibatch_size = d_input_size
 d_learning_rate = 2e-4  # 2e-4
 g_learning_rate = 2e-4
 optim_betas = (0.9, 0.999)
-num_epochs = 30000
-print_interval = 200
+num_epochs = 10000
+print_interval = 333
+save_data = 333
 d_steps = 1  # 'k' steps in the original GAN paper. Can put the discriminator on higher training freq than generator
 g_steps = 1
+k = 0
 
 # ### Uncomment only one of these
 #(name, preprocess, d_input_func) = ("Raw data", lambda data: data, lambda x: x)
@@ -87,6 +96,10 @@ gi_sampler = get_generator_input_sampler()
 G = Generator(input_size=g_input_size, hidden_size=g_hidden_size, output_size=g_output_size)
 D = Discriminator(input_size=d_input_func(d_input_size), hidden_size=d_hidden_size, output_size=d_output_size)
 criterion = nn.BCELoss()  # Binary cross entropy: http://pytorch.org/docs/nn.html#bceloss
+
+
+
+
 d_optimizer = optim.Adam(D.parameters(), lr=d_learning_rate, betas=optim_betas)
 g_optimizer = optim.Adam(G.parameters(), lr=g_learning_rate, betas=optim_betas)
 
@@ -120,6 +133,24 @@ for epoch in range(num_epochs):
 
         g_error.backward()
         g_optimizer.step()  # Only optimizes G's parameters
+        # not sure if error is a python term or not so using the_error
+    the_error = math.fabs(g_error-d_real_error) 
+
+    if num_epochs > 1:
+        d_learning_rate = 1/math.exp(the_error*the_error)
+        
+    if num_epochs > 1:
+        g_learning_rate = 1/math.exp(the_error*the_error)
+       
+    # loop to populate chart data with values from G and D        
+    if epoch % save_data == 0: 
+       chart_data[0,k] = k
+       chart_data[1,k] = d_real_error
+       chart_data[2,k] = d_fake_error
+       chart_data[3,k] = g_error
+       k += 1     
+    
+            
 
     if epoch % print_interval == 0:
         print("%s: D: %s/%s G: %s (Real: %s, Fake: %s) " % (epoch,
@@ -127,4 +158,19 @@ for epoch in range(num_epochs):
                                                             extract(d_fake_error)[0],
                                                             extract(g_error)[0],
                                                             stats(extract(d_real_data)),
-                                                            stats(extract(d_fake_data))))
+stats(extract(d_fake_data))))
+
+end_time = time.time()
+print("Elapsed time was %g seconds" % (end_time - start_time))
+
+
+
+plt.plot(chart_data[1],label = "d real error")
+     
+plt.plot(chart_data[2],label = "d fake error")
+     
+plt.plot(chart_data[3],label = "g error") 
+ 
+plt.legend(loc='upper left')
+    
+
